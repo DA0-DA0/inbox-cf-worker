@@ -1,0 +1,12 @@
+name = "inbox"
+main = "src/index.ts"
+compatibility_date = "2023-06-17"
+node_compat = true
+
+kv_namespaces = [
+  { binding = "NONCES", id = "NONCES_ID", preview_id = "NONCES_PREVIEW_ID" },
+  { binding = "INBOX", id = "INBOX_ID", preview_id = "INBOX_PREVIEW_ID" },
+]
+
+# Secrets:
+# - INDEXER_WEBHOOK_SECRET
