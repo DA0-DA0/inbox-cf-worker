@@ -41,6 +41,6 @@ export const addItem = async (
   )
 
   return respond(200, {
-    status: 'success',
+    success: true,
   })
 }
