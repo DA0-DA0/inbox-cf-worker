@@ -4,15 +4,31 @@ import {
   emailKey,
   getTypeConfigForWallet,
   respond,
+  respondError,
   typeEnabledKey,
 } from '../utils'
-import { clearEmail, setEmail, verifyEmailMetadata } from '../utils/email'
+import {
+  clearEmail,
+  setEmail,
+  verifyEmail,
+  verifyEmailMetadata,
+} from '../utils/email'
 
-export type ConfigBody = {
+type ConfigBody = {
   // Update email. If empty or null, remove email.
   email?: string | null
   // Update notification settings per-type.
-  types?: Record<string, boolean>
+  types?: Record<string, number>
+  // If present, verify email.
+  verify?: string
+  // If present, resend verification email.
+  resend?: boolean
+}
+
+type ConfigResponse = {
+  email: string | null
+  verified: boolean
+  types: Record<string, number | null>
 }
 
 export const config = async (
@@ -38,37 +54,59 @@ export const config = async (
   const types = request.parsedBody.data.types
   if (typeof types === 'object') {
     await Promise.all(
-      Object.entries(types).map(([type, enabled]) =>
-        env.INBOX.put(typeEnabledKey(bech32Hex, type), enabled ? '1' : '0')
+      Object.entries(types).map(([type, config]) =>
+        env.INBOX.put(typeEnabledKey(bech32Hex, type), `${config}`)
       )
     )
+  }
+
+  // Verify email if present.
+  const verificationCode = request.parsedBody.data.verify
+  if (typeof verificationCode === 'string' && verificationCode.length > 0) {
+    try {
+      await verifyEmail(env, bech32Hex, verificationCode)
+    } catch (err) {
+      if (err instanceof Error) {
+        return respondError(400, err.message)
+      }
+
+      console.error(
+        'Error verifying email',
+        request.parsedBody.data.auth.publicKey,
+        verificationCode,
+        err
+      )
+      return respondError(500, 'Internal server error.')
+    }
   }
 
   // Get email.
   const { value: email, metadata } =
     await env.INBOX.getWithMetadata<EmailMetadata>(emailKey(bech32Hex))
 
-  if (!verifyEmailMetadata(metadata)) {
+  if (email && !verifyEmailMetadata(metadata)) {
     throw new Error(
       'Invalid email metadata. Try again in a few minutes or contact us.'
     )
   }
 
-  const verified = metadata.verifiedAt !== null
+  const verified = verifyEmailMetadata(metadata) && metadata.verifiedAt !== null
 
   // Resend verification email. If just set email, verification email already
   // sent in `setEmail`.
-  if (!newEmail && email && !verified && request.query?.resend) {
+  if (!newEmail && email && !verified && request.parsedBody.data.resend) {
     await setEmail(env, bech32Hex, email)
   }
 
   // Get notification settings.
-  const config = await getTypeConfigForWallet(env, bech32Hex)
+  const typesConfig = await getTypeConfigForWallet(env, bech32Hex)
 
-  // Return success.
-  return respond(200, {
+  const response: ConfigResponse = {
     email,
     verified,
-    config,
-  })
+    types: typesConfig,
+  }
+
+  // Return success.
+  return respond(200, response)
 }

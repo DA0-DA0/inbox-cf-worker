@@ -44,6 +44,8 @@ kv-namespaces = [
 
 ```sh
 echo <VALUE> | npx wrangler secret put INDEXER_WEBHOOK_SECRET
+echo <VALUE> | npx wrangler secret put AWS_ACCESS_KEY_ID
+echo <VALUE> | npx wrangler secret put AWS_SECRET_ACCESS_KEY
 ```
 
 ## Deploy

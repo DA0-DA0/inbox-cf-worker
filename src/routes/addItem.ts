@@ -1,17 +1,27 @@
 import { fromBech32, toHex } from '@cosmjs/encoding'
-import { AddItemBody, Env } from '../types'
 import {
+  AddItemBody,
+  EmailTemplate,
+  Env,
+  InboxItemType,
+  InboxItemTypeMethod,
+  InboxItemTypePendingFollowData,
+} from '../types'
+import {
+  CHAIN_ID_TO_DAO_DAO_SUBDOMAIN,
   itemKey,
   objectMatchesStructure,
   respond,
   respondError,
 } from '../utils'
+import { getVerifiedEmail, isTypeMethodEnabled } from '../utils/email'
+import { sendEmail } from '../utils/ses'
 
 export const addItem = async (
   request: Request,
-  { INBOX, INDEXER_WEBHOOK_SECRET }: Env
+  env: Env
 ): Promise<Response> => {
-  if (request.headers.get('x-api-key') !== INDEXER_WEBHOOK_SECRET) {
+  if (request.headers.get('x-api-key') !== env.INDEXER_WEBHOOK_SECRET) {
     return respondError(401, 'Invalid API key')
   }
 
@@ -29,16 +39,77 @@ export const addItem = async (
   const bech32Hex = toHex(fromBech32(body.walletAddress).data)
 
   // Add to inbox.
-  await INBOX.put(
-    itemKey(bech32Hex, `${body.type}/${crypto.randomUUID()}`),
-    JSON.stringify(body.data),
-    {
+  if (
+    await isTypeMethodEnabled(
+      env,
+      bech32Hex,
+      body.type,
+      InboxItemTypeMethod.Website
+    )
+  ) {
+    const id = `${body.type}/${crypto.randomUUID()}`
+    await env.INBOX.put(itemKey(bech32Hex, id), JSON.stringify(body.data), {
       metadata: {
         timestamp: new Date().toISOString(),
         chainId: body.chainId,
       },
+    })
+  }
+
+  // Email notification.
+  const email = await getVerifiedEmail(env, bech32Hex)
+  if (
+    email &&
+    (await isTypeMethodEnabled(
+      env,
+      bech32Hex,
+      body.type,
+      InboxItemTypeMethod.Email
+    ))
+  ) {
+    switch (body.type) {
+      case InboxItemType.PendingFollow:
+        // If no chain ID, log error and continue.
+        if (!body.chainId) {
+          console.error('No chain ID for pending follow', JSON.stringify(body))
+          break
+        }
+
+        if (!(body.chainId in CHAIN_ID_TO_DAO_DAO_SUBDOMAIN)) {
+          console.error(
+            'Invalid chain ID for pending follow',
+            JSON.stringify(body)
+          )
+          break
+        }
+
+        if (
+          objectMatchesStructure<InboxItemTypePendingFollowData>(body.data, {
+            dao: {},
+            name: {},
+          })
+        ) {
+          // Send email. On failure, log error and continue.
+          // TODO: Capture email failures and retry.
+          await sendEmail(env, email, EmailTemplate.PendingFollow, {
+            name: body.data.name,
+            url: `https://${
+              CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
+            }.daodao.zone/dao/${body.data.dao}`,
+          }).catch((err) => {
+            console.error(
+              'Error sending email',
+              email,
+              EmailTemplate.PendingFollow,
+              JSON.stringify(body.data),
+              err
+            )
+          })
+        }
+
+        break
     }
-  )
+  }
 
   return respond(200, {
     success: true,

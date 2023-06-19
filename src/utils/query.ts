@@ -1,4 +1,5 @@
 import { Env, LoadedItem } from '../types'
+import { getTypeConfig } from './email'
 import { itemKey, typeEnabledKey } from './keys'
 
 export const getItemsForWallet = async (
@@ -61,14 +62,14 @@ export const getItemsForWallet = async (
 }
 
 export const getTypeConfigForWallet = async (
-  { INBOX }: Env,
+  env: Env,
   bech32Hex: string
-): Promise<Record<string, boolean>> => {
+): Promise<Record<string, number | null>> => {
   // Get all types by paginating list query.
   const types: string[] = []
   let cursor: string | undefined
   while (true) {
-    const response = await INBOX.list({
+    const response = await env.INBOX.list({
       prefix: typeEnabledKey(bech32Hex, ''),
       cursor,
     })
@@ -85,23 +86,18 @@ export const getTypeConfigForWallet = async (
   }
 
   // Load values for types.
-  const typesEnabled = await Promise.all(
-    types.map(async (type) => {
-      const enabled = await INBOX.get(typeEnabledKey(bech32Hex, type))
-
-      return {
-        type,
-        // If enabled is null, default to true.
-        enabled: enabled === null || enabled === '1',
-      }
-    })
+  const typeConfigs = await Promise.all(
+    types.map(async (type) => ({
+      type,
+      config: await getTypeConfig(env, bech32Hex, type),
+    }))
   )
 
-  return typesEnabled.reduce(
-    (acc, { type, enabled }) => ({
+  return typeConfigs.reduce(
+    (acc, { type, config }) => ({
       ...acc,
-      [type]: enabled,
+      [type]: config,
     }),
-    {} as Record<string, boolean>
+    {} as Record<string, number | null>
   )
 }

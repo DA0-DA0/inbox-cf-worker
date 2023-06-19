@@ -4,7 +4,7 @@ type Structure = {
 }
 
 // Check if object contains the expected structure.
-export const objectMatchesStructure = (
+export const objectMatchesStructure = <T = unknown>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   object: any | undefined | null,
   structure: Structure,
@@ -14,7 +14,7 @@ export const objectMatchesStructure = (
   } = {
     ignoreNullUndefined: false,
   }
-): boolean => {
+): object is T => {
   if (!object || typeof object !== 'object' || Array.isArray(object)) {
     return false
   }

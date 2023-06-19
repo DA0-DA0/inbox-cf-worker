@@ -6,6 +6,8 @@ export interface Env {
 
   // Secrets.
   INDEXER_WEBHOOK_SECRET: string
+  AWS_ACCESS_KEY_ID: string
+  AWS_SECRET_ACCESS_KEY: string
 }
 
 export interface Auth {
@@ -53,4 +55,24 @@ export type EmailMetadata = {
   verificationCode: string | null
   verificationSentAt: number
   verifiedAt: number | null
+}
+
+export enum InboxItemType {
+  PendingFollow = 'pending_follow',
+}
+
+export enum InboxItemTypeMethod {
+  Website = 1 << 0,
+  Email = 1 << 1,
+}
+
+export enum EmailTemplate {
+  VerifyEmail = 'inbox-verify',
+  PendingFollow = 'inbox-pending_follow',
+}
+
+export type InboxItemTypePendingFollowData = {
+  chainId: string
+  dao: string
+  name: string
 }

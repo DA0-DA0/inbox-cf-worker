@@ -1,6 +1,15 @@
-import { EmailMetadata, Env } from '../types'
-import { emailKey } from './keys'
+import {
+  EmailMetadata,
+  EmailTemplate,
+  Env,
+  InboxItemTypeMethod,
+} from '../types'
+import { emailKey, typeEnabledKey } from './keys'
 import { objectMatchesStructure } from './objectMatchesStructure'
+import { sendEmail } from './ses'
+
+// 3 days.
+const EXPIRATION_MS = 3 * 24 * 60 * 60 * 1000
 
 // Sets email and sends verification email. If already set, sends a new code,
 // invalidating the old one.
@@ -22,7 +31,11 @@ export const setEmail = async (
     metadata,
   })
 
-  // TODO: Send verification email.
+  // Send verification email.
+  await sendEmail(env, email, EmailTemplate.VerifyEmail, {
+    code: verificationCode,
+    expiresAt: new Date(verificationSentAt + EXPIRATION_MS).toLocaleString(),
+  })
 }
 
 export const clearEmail = async (
@@ -56,8 +69,8 @@ export const verifyEmail = async (
     throw new Error('Invalid verification code.')
   }
 
-  // Check if verification code expired, 3 days.
-  if (metadata.verificationSentAt + 3 * 24 * 60 * 60 * 1000 < Date.now()) {
+  // Check if verification code expired.
+  if (metadata.verificationSentAt + EXPIRATION_MS < Date.now()) {
     throw new Error('Verification code expired.')
   }
 
@@ -84,3 +97,47 @@ export const verifyEmailMetadata = (
       ignoreNullUndefined: true,
     }
   )
+
+export const getVerifiedEmail = async (
+  { INBOX }: Env,
+  bech32Hex: string
+): Promise<string | null> => {
+  const { value: email, metadata } = await INBOX.getWithMetadata<EmailMetadata>(
+    emailKey(bech32Hex)
+  )
+
+  // No email or not verified.
+  if (!email || !verifyEmailMetadata(metadata) || !metadata.verifiedAt) {
+    return null
+  }
+
+  return email
+}
+
+export const getTypeConfig = async (
+  { INBOX }: Env,
+  bech32Hex: string,
+  type: string
+): Promise<number | null> => {
+  const config = await INBOX.get(typeEnabledKey(bech32Hex, type))
+  if (!config) {
+    return null
+  }
+
+  return Number(config)
+}
+
+export const isTypeMethodEnabled = async (
+  env: Env,
+  bech32Hex: string,
+  type: string,
+  method: InboxItemTypeMethod
+): Promise<boolean> => {
+  const config = await getTypeConfig(env, bech32Hex, type)
+  // Default to enabled.
+  if (config === null || isNaN(config)) {
+    return true
+  }
+
+  return (Number(config) & method) === method
+}

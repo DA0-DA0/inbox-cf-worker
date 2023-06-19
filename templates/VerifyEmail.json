@@ -1,0 +1,6 @@
+{
+  "TemplateName": "inbox-verify",
+  "SubjectPart": "DAO DAO Email Verification",
+  "HtmlPart": "Verify: https://daodao.zone/inbox/verify?code={{code}} (Expiration: {{expiresAt}})",
+  "TextPart": "Verify: https://daodao.zone/inbox/verify?code={{code}} (Expiration: {{expiresAt}})"
+}
