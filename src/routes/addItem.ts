@@ -5,7 +5,7 @@ import {
   Env,
   InboxItemType,
   InboxItemTypeMethod,
-  InboxItemTypePendingFollowData,
+  InboxItemTypeJoinedDaoData,
 } from '../types'
 import {
   CHAIN_ID_TO_DAO_DAO_SUBDOMAIN,
@@ -68,30 +68,27 @@ export const addItem = async (
     ))
   ) {
     switch (body.type) {
-      case InboxItemType.PendingFollow:
+      case InboxItemType.JoinedDao:
         // If no chain ID, log error and continue.
         if (!body.chainId) {
-          console.error('No chain ID for pending follow', JSON.stringify(body))
+          console.error('No chain ID for joined DAO', JSON.stringify(body))
           break
         }
 
         if (!(body.chainId in CHAIN_ID_TO_DAO_DAO_SUBDOMAIN)) {
-          console.error(
-            'Invalid chain ID for pending follow',
-            JSON.stringify(body)
-          )
+          console.error('Invalid chain ID for joined DAO', JSON.stringify(body))
           break
         }
 
         if (
-          objectMatchesStructure<InboxItemTypePendingFollowData>(body.data, {
+          objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
             dao: {},
             name: {},
           })
         ) {
           // Send email. On failure, log error and continue.
           // TODO: Capture email failures and retry.
-          await sendEmail(env, email, EmailTemplate.PendingFollow, {
+          await sendEmail(env, email, EmailTemplate.JoinedDao, {
             name: body.data.name,
             url: `https://${
               CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
@@ -100,7 +97,7 @@ export const addItem = async (
             console.error(
               'Error sending email',
               email,
-              EmailTemplate.PendingFollow,
+              EmailTemplate.JoinedDao,
               JSON.stringify(body.data),
               err
             )

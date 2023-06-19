@@ -58,7 +58,7 @@ export type EmailMetadata = {
 }
 
 export enum InboxItemType {
-  PendingFollow = 'pending_follow',
+  JoinedDao = 'joined_dao',
 }
 
 export enum InboxItemTypeMethod {
@@ -68,10 +68,10 @@ export enum InboxItemTypeMethod {
 
 export enum EmailTemplate {
   VerifyEmail = 'inbox-verify',
-  PendingFollow = 'inbox-pending_follow',
+  JoinedDao = 'inbox-joined_dao',
 }
 
-export type InboxItemTypePendingFollowData = {
+export type InboxItemTypeJoinedDaoData = {
   chainId: string
   dao: string
   name: string

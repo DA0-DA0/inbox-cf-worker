@@ -1,6 +1,6 @@
 {
-  "TemplateName": "inbox-pending_follow",
-  "SubjectPart": "You joined {{name}}!",
+  "TemplateName": "inbox-joined_dao",
+  "SubjectPart": "You joined {{name}}",
   "HtmlPart": "You've been added to {{name}}. Follow it to receive updates. <br><br> <a href=\"{{url}}\">View DAO</a>",
   "TextPart": "You've been added to {{name}}. Follow it to receive updates. \n\n {{url}}"
 }
