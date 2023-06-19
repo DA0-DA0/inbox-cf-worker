@@ -5,7 +5,7 @@ import { Request } from 'itty-router'
 
 export const load = async (request: Request, env: Env): Promise<Response> => {
   const walletAddress = request.params?.walletAddress
-  // Require wallet address and type.
+  // Require wallet address.
   if (!walletAddress) {
     return respondError(400, 'Missing wallet address.')
   }

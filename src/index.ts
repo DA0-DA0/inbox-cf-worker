@@ -8,6 +8,8 @@ import { respondError } from './utils'
 import { addItem } from './routes/addItem'
 import { clear } from './routes/clear'
 import { load } from './routes/load'
+import { config } from './routes/config'
+import { verify } from './routes/verify'
 
 // Create CORS handlers.
 const { preflight, corsify } = createCors({
@@ -36,10 +38,17 @@ router.get('/nonce/:publicKey', handleNonce)
 // Load items from inbox.
 router.get('/load/:walletAddress', load)
 
+// Verify email. Takes query param `email`.
+router.get('/verify/:walletAddress/:code', verify)
+
 //! Authenticated routes.
 
 // Clear items in inbox.
 router.post('/clear', authMiddleware, clear)
+
+// Update email and notification config for a wallet, and respond with
+// everything. Takes query param `resend` to resend the verification email.
+router.post('/config', authMiddleware, config)
 
 //! 404
 router.all('*', () => respondError(404, 'Not found'))

@@ -48,3 +48,9 @@ export type LoadedItem = {
   chainId: string | undefined
   data: unknown
 }
+
+export type EmailMetadata = {
+  verificationCode: string | null
+  verificationSentAt: number
+  verifiedAt: number | null
+}
