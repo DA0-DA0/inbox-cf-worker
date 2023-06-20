@@ -75,4 +75,5 @@ export type InboxItemTypeJoinedDaoData = {
   chainId: string
   dao: string
   name: string
+  imageUrl: string | null | undefined
 }

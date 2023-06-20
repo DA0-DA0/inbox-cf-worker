@@ -81,15 +81,23 @@ export const addItem = async (
         }
 
         if (
-          objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
-            dao: {},
-            name: {},
-          })
+          objectMatchesStructure<InboxItemTypeJoinedDaoData>(
+            body.data,
+            {
+              dao: {},
+              name: {},
+              imageUrl: {},
+            },
+            {
+              ignoreNullUndefined: true,
+            }
+          )
         ) {
           // Send email. On failure, log error and continue.
           // TODO: Capture email failures and retry.
           await sendEmail(env, email, EmailTemplate.JoinedDao, {
             name: body.data.name,
+            imageUrl: body.data.imageUrl,
             url: `https://${
               CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
             }.daodao.zone/dao/${body.data.dao}`,
