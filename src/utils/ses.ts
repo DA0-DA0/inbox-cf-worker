@@ -34,7 +34,10 @@ export const sendEmail = async (
       ToAddresses: [to],
     },
     Template: template,
-    TemplateData: JSON.stringify(variables),
+    TemplateData: JSON.stringify({
+      ...variables,
+      manageNotificationsUrl: 'https://daodao.zone/inbox/settings',
+    }),
   })
 
   await ses.send(command)
