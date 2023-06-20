@@ -33,8 +33,8 @@ export const setEmail = async (
 
   // Send verification email.
   await sendEmail(env, email, EmailTemplate.VerifyEmail, {
-    code: verificationCode,
-    expiresAt: new Date(verificationSentAt + EXPIRATION_MS).toLocaleString(),
+    url: `https://daodao.zone/inbox/verify?code=${verificationCode}`,
+    expirationTime: EXPIRATION_MS / 1000 / 60 / 60 / 24 + ' days',
   })
 }
 
