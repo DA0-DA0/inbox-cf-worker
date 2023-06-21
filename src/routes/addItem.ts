@@ -97,7 +97,7 @@ export const addItem = async (
           // TODO: Capture email failures and retry.
           await sendEmail(env, email, EmailTemplate.JoinedDao, {
             name: body.data.name,
-            imageUrl: body.data.imageUrl,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
             url: `https://${
               CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
             }.daodao.zone/dao/${body.data.dao}`,
