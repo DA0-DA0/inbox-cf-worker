@@ -39,7 +39,6 @@ export type AuthorizedRequest<
 
 export type AddItemBody = {
   chainId?: string
-  walletAddress: string
   type: string
   data: unknown
 }

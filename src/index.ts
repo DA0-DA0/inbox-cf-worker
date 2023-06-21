@@ -29,7 +29,8 @@ router.all('*', preflight)
 //! Unauthenticated routes.
 
 // Add item to inbox. Indexer webhook.
-router.post('/add', addItem)
+router.post('/add/pk/:publicKey', addItem)
+router.post('/add/bech32/:bech32Address', addItem)
 
 // Get nonce for publicKey.
 router.get('/nonce/:publicKey', handleNonce)

@@ -16,9 +16,11 @@ import {
 } from '../utils'
 import { getVerifiedEmail, isTypeMethodEnabled } from '../utils/email'
 import { sendEmail } from '../utils/ses'
+import { Request as IttyRequest } from 'itty-router'
+import { secp256k1PublicKeyToBech32Hex } from '../crypto'
 
 export const addItem = async (
-  request: Request,
+  request: Request & IttyRequest,
   env: Env
 ): Promise<Response> => {
   if (request.headers.get('x-api-key') !== env.INDEXER_WEBHOOK_SECRET) {
@@ -28,7 +30,6 @@ export const addItem = async (
   const body: AddItemBody = await request.json()
   if (
     !objectMatchesStructure(body, {
-      walletAddress: {},
       type: {},
       data: {},
     })
@@ -36,7 +37,18 @@ export const addItem = async (
     return respondError(400, 'Invalid request body')
   }
 
-  const bech32Hex = toHex(fromBech32(body.walletAddress).data)
+  const bech32Address = request.query?.bech32Address
+  const publicKey = request.query?.publicKey
+
+  const bech32Hex = bech32Address
+    ? toHex(fromBech32(bech32Address).data)
+    : publicKey
+    ? secp256k1PublicKeyToBech32Hex(publicKey)
+    : null
+
+  if (!bech32Hex) {
+    return respondError(400, 'Invalid request query')
+  }
 
   // Add to inbox.
   if (
