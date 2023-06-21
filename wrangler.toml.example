@@ -9,6 +9,6 @@ kv_namespaces = [
 ]
 
 # Secrets:
-# - INDEXER_WEBHOOK_SECRET
+# - ADD_SECRET
 # - AWS_ACCESS_KEY_ID
 # - AWS_SECRET_ACCESS_KEY

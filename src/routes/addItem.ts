@@ -23,7 +23,7 @@ export const addItem = async (
   request: Request & IttyRequest,
   env: Env
 ): Promise<Response> => {
-  if (request.headers.get('x-api-key') !== env.INDEXER_WEBHOOK_SECRET) {
+  if (request.headers.get('x-api-key') !== env.ADD_SECRET) {
     return respondError(401, 'Invalid API key')
   }
 
