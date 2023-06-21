@@ -3,7 +3,7 @@ import { SESClient, SendTemplatedEmailCommand } from '@aws-sdk/client-ses'
 import { EmailTemplate, Env } from '../types'
 
 const REGION = 'us-east-1'
-const SOURCE = 'notify@inbox.daodao.zone'
+const SOURCE = 'DAO DAO <notify@inbox.daodao.zone>'
 
 let ses: SESClient | undefined
 const getSes = async ({ AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY }: Env) => {
