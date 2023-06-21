@@ -4,6 +4,8 @@ export interface Env {
   NONCES: KVNamespace
   INBOX: KVNamespace
 
+  EMAILS: Queue<Email>
+
   // Secrets.
   ADD_SECRET: string
   AWS_ACCESS_KEY_ID: string
@@ -84,4 +86,11 @@ export type InboxItemTypeProposalCreatedData = {
   imageUrl: string | undefined
   proposalId: string
   proposalTitle: string
+}
+
+export type Email = {
+  from: string
+  to: string
+  template: string
+  variables: Record<string, string>
 }

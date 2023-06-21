@@ -40,12 +40,16 @@ kv-namespaces = [
 ]
 ```
 
-4. Configure secrets:
+4. Setup email queue binding in `wrangler.toml`:
+
+```toml
+
+```
+
+5. Configure secrets:
 
 ```sh
 echo <VALUE> | npx wrangler secret put ADD_SECRET
-echo <VALUE> | npx wrangler secret put AWS_ACCESS_KEY_ID
-echo <VALUE> | npx wrangler secret put AWS_SECRET_ACCESS_KEY
 ```
 
 ## Deploy

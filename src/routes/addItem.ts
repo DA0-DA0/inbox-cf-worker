@@ -14,9 +14,11 @@ import {
   objectMatchesStructure,
   respond,
   respondError,
+  getVerifiedEmail,
+  isTypeMethodEnabled,
+  sendEmail,
+  DEFAULT_EMAIL_SOURCE,
 } from '../utils'
-import { getVerifiedEmail, isTypeMethodEnabled } from '../utils/email'
-import { sendEmail } from '../utils/ses'
 import { Request as IttyRequest } from 'itty-router'
 import { secp256k1PublicKeyToBech32Hex } from '../crypto'
 
@@ -167,7 +169,13 @@ export const addItem = async (
     // Send email. On failure, log error and continue.
     // TODO: Capture email failures and retry.
     if (template && variables) {
-      await sendEmail(env, email, template, variables).catch((err) => {
+      await sendEmail(
+        env,
+        DEFAULT_EMAIL_SOURCE,
+        email,
+        template,
+        variables
+      ).catch((err) => {
         console.error(
           'Error sending email',
           email,

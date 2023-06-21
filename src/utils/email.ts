@@ -1,13 +1,14 @@
 import {
+  Email,
   EmailMetadata,
   EmailTemplate,
   Env,
   InboxItemType,
   InboxItemTypeMethod,
 } from '../types'
+import { DEFAULT_EMAIL_SOURCE } from './constants'
 import { emailKey, typeEnabledKey } from './keys'
 import { objectMatchesStructure } from './objectMatchesStructure'
-import { sendEmail } from './ses'
 
 // 3 days.
 const EXPIRATION_MS = 3 * 24 * 60 * 60 * 1000
@@ -33,7 +34,7 @@ export const setEmail = async (
   })
 
   // Send verification email.
-  await sendEmail(env, email, EmailTemplate.VerifyEmail, {
+  await sendEmail(env, DEFAULT_EMAIL_SOURCE, email, EmailTemplate.VerifyEmail, {
     url: `https://daodao.zone/inbox/verify?code=${verificationCode}`,
     expirationTime: EXPIRATION_MS / 1000 / 60 / 60 / 24 + ' days',
   })
@@ -155,3 +156,23 @@ const TYPE_ALLOWED_METHODS: Record<string, InboxItemTypeMethod[] | undefined> =
   {
     [InboxItemType.ProposalCreated]: [InboxItemTypeMethod.Email],
   }
+
+export const sendEmail = async (
+  { EMAILS }: Env,
+  from: string,
+  to: string,
+  template: EmailTemplate,
+  variables: Record<string, unknown>
+) => {
+  const email: Email = {
+    from,
+    to,
+    template,
+    variables: {
+      ...variables,
+      manageNotificationsUrl: 'https://daodao.zone/inbox/settings',
+    },
+  }
+
+  await EMAILS.send(email)
+}

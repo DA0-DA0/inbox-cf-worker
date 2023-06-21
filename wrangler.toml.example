@@ -8,7 +8,9 @@ kv_namespaces = [
   { binding = "INBOX", id = "INBOX_ID", preview_id = "INBOX_PREVIEW_ID" },
 ]
 
+[[queues.producers]]
+queue = "emails"
+binding = "EMAILS"
+
 # Secrets:
 # - ADD_SECRET
-# - AWS_ACCESS_KEY_ID
-# - AWS_SECRET_ACCESS_KEY
