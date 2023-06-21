@@ -58,6 +58,7 @@ export type EmailMetadata = {
 
 export enum InboxItemType {
   JoinedDao = 'joined_dao',
+  ProposalCreated = 'proposal_created',
 }
 
 export enum InboxItemTypeMethod {
@@ -68,11 +69,19 @@ export enum InboxItemTypeMethod {
 export enum EmailTemplate {
   VerifyEmail = 'inbox-verify',
   JoinedDao = 'inbox-joined_dao',
+  ProposalCreated = 'inbox-proposal_created',
 }
 
 export type InboxItemTypeJoinedDaoData = {
-  chainId: string
   dao: string
   name: string
-  imageUrl: string | null | undefined
+  imageUrl: string | undefined
+}
+
+export type InboxItemTypeProposalCreatedData = {
+  dao: string
+  daoName: string
+  imageUrl: string | undefined
+  proposalId: string
+  proposalTitle: string
 }

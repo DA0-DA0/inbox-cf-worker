@@ -2,6 +2,7 @@ import {
   EmailMetadata,
   EmailTemplate,
   Env,
+  InboxItemType,
   InboxItemTypeMethod,
 } from '../types'
 import { emailKey, typeEnabledKey } from './keys'
@@ -133,6 +134,12 @@ export const isTypeMethodEnabled = async (
   type: string,
   method: InboxItemTypeMethod
 ): Promise<boolean> => {
+  // Check if method is allowed for type.
+  const allowedMethods = TYPE_ALLOWED_METHODS[type]
+  if (allowedMethods && !allowedMethods.includes(method)) {
+    return false
+  }
+
   const config = await getTypeConfig(env, bech32Hex, type)
   // Default to enabled.
   if (config === null || isNaN(config)) {
@@ -141,3 +148,10 @@ export const isTypeMethodEnabled = async (
 
   return (Number(config) & method) === method
 }
+
+// If defined, only the listed methods are allowed for the given type.
+// Otherwise, all methods are allowed.
+const TYPE_ALLOWED_METHODS: Record<string, InboxItemTypeMethod[] | undefined> =
+  {
+    [InboxItemType.ProposalCreated]: [InboxItemTypeMethod.Email],
+  }

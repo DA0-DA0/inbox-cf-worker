@@ -6,6 +6,7 @@ import {
   InboxItemType,
   InboxItemTypeMethod,
   InboxItemTypeJoinedDaoData,
+  InboxItemTypeProposalCreatedData,
 } from '../types'
 import {
   CHAIN_ID_TO_DAO_DAO_SUBDOMAIN,
@@ -37,8 +38,8 @@ export const addItem = async (
     return respondError(400, 'Invalid request body')
   }
 
-  const bech32Address = request.query?.bech32Address
-  const publicKey = request.query?.publicKey
+  const bech32Address = request.params?.bech32Address
+  const publicKey = request.params?.publicKey
 
   const bech32Hex = bech32Address
     ? toHex(fromBech32(bech32Address).data)
@@ -79,16 +80,19 @@ export const addItem = async (
       InboxItemTypeMethod.Email
     ))
   ) {
+    let template: EmailTemplate | undefined
+    let variables: Record<string, unknown> | undefined
+
     switch (body.type) {
       case InboxItemType.JoinedDao:
         // If no chain ID, log error and continue.
         if (!body.chainId) {
-          console.error('No chain ID for joined DAO', JSON.stringify(body))
+          console.error('No chain ID', JSON.stringify(body))
           break
         }
 
         if (!(body.chainId in CHAIN_ID_TO_DAO_DAO_SUBDOMAIN)) {
-          console.error('Invalid chain ID for joined DAO', JSON.stringify(body))
+          console.error('Invalid chain ID', JSON.stringify(body))
           break
         }
 
@@ -105,26 +109,74 @@ export const addItem = async (
             }
           )
         ) {
-          // Send email. On failure, log error and continue.
-          // TODO: Capture email failures and retry.
-          await sendEmail(env, email, EmailTemplate.JoinedDao, {
+          template = EmailTemplate.JoinedDao
+          variables = {
             name: body.data.name,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
             url: `https://${
               CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
             }.daodao.zone/dao/${body.data.dao}`,
-          }).catch((err) => {
-            console.error(
-              'Error sending email',
-              email,
-              EmailTemplate.JoinedDao,
-              JSON.stringify(body.data),
-              err
-            )
-          })
+          }
         }
 
         break
+      case InboxItemType.ProposalCreated:
+        // If no chain ID, log error and continue.
+        if (!body.chainId) {
+          console.error('No chain ID', JSON.stringify(body))
+          break
+        }
+
+        if (!(body.chainId in CHAIN_ID_TO_DAO_DAO_SUBDOMAIN)) {
+          console.error('Invalid chain ID', JSON.stringify(body))
+          break
+        }
+
+        if (
+          objectMatchesStructure<InboxItemTypeProposalCreatedData>(
+            body.data,
+            {
+              dao: {},
+              daoName: {},
+              imageUrl: {},
+              proposalId: {},
+              proposalTitle: {},
+            },
+            {
+              ignoreNullUndefined: true,
+            }
+          )
+        ) {
+          template = EmailTemplate.ProposalCreated
+          variables = {
+            url: `https://${
+              CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
+            }.daodao.zone/dao/${body.data.dao}/proposals/${
+              body.data.proposalId
+            }`,
+            daoName: body.data.daoName,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
+            proposalId: body.data.proposalId,
+            proposalTitle: body.data.proposalTitle,
+          }
+        }
+
+        break
+    }
+
+    // Send email. On failure, log error and continue.
+    // TODO: Capture email failures and retry.
+    if (template && variables) {
+      await sendEmail(env, email, template, variables).catch((err) => {
+        console.error(
+          'Error sending email',
+          email,
+          JSON.stringify(body),
+          template,
+          JSON.stringify(variables),
+          err
+        )
+      })
     }
   }
 
