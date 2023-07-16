@@ -99,17 +99,10 @@ export const addItem = async (
         }
 
         if (
-          objectMatchesStructure<InboxItemTypeJoinedDaoData>(
-            body.data,
-            {
-              dao: {},
-              name: {},
-              imageUrl: {},
-            },
-            {
-              ignoreNullUndefined: true,
-            }
-          )
+          objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
+            dao: {},
+            name: {},
+          })
         ) {
           template = EmailTemplate.JoinedDao
           variables = {
@@ -135,19 +128,12 @@ export const addItem = async (
         }
 
         if (
-          objectMatchesStructure<InboxItemTypeProposalCreatedData>(
-            body.data,
-            {
-              dao: {},
-              daoName: {},
-              imageUrl: {},
-              proposalId: {},
-              proposalTitle: {},
-            },
-            {
-              ignoreNullUndefined: true,
-            }
-          )
+          objectMatchesStructure<InboxItemTypeProposalCreatedData>(body.data, {
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
         ) {
           template = EmailTemplate.ProposalCreated
           variables = {
