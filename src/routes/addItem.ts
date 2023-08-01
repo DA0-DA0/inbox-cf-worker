@@ -138,6 +138,17 @@ export const addItem = async (
     // Send email. On failure, log error and continue.
     // TODO: Capture email failures and retry.
     if (template && variables) {
+      // Transform image URL from IPFS if necessary.
+      if (
+        typeof variables.imageUrl === 'string' &&
+        variables.imageUrl.startsWith('ipfs://')
+      ) {
+        variables.imageUrl = variables.imageUrl.replace(
+          'ipfs://',
+          'https://nftstorage.link/ipfs/'
+        )
+      }
+
       await sendEmail(
         env,
         DEFAULT_EMAIL_SOURCE,
