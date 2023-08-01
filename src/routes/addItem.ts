@@ -9,7 +9,6 @@ import {
   InboxItemTypeProposalCreatedData,
 } from '../types'
 import {
-  CHAIN_ID_TO_DAO_DAO_SUBDOMAIN,
   itemKey,
   objectMatchesStructure,
   respond,
@@ -93,11 +92,6 @@ export const addItem = async (
           break
         }
 
-        if (!(body.chainId in CHAIN_ID_TO_DAO_DAO_SUBDOMAIN)) {
-          console.error('Invalid chain ID', JSON.stringify(body))
-          break
-        }
-
         if (
           objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
             dao: {},
@@ -108,9 +102,7 @@ export const addItem = async (
           variables = {
             name: body.data.name,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            url: `https://${
-              CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
-            }.daodao.zone/dao/${body.data.dao}`,
+            url: `https://daodao.zone/dao/${body.data.dao}`,
           }
         }
 
@@ -119,11 +111,6 @@ export const addItem = async (
         // If no chain ID, log error and continue.
         if (!body.chainId) {
           console.error('No chain ID', JSON.stringify(body))
-          break
-        }
-
-        if (!(body.chainId in CHAIN_ID_TO_DAO_DAO_SUBDOMAIN)) {
-          console.error('Invalid chain ID', JSON.stringify(body))
           break
         }
 
@@ -137,11 +124,7 @@ export const addItem = async (
         ) {
           template = EmailTemplate.ProposalCreated
           variables = {
-            url: `https://${
-              CHAIN_ID_TO_DAO_DAO_SUBDOMAIN[body.chainId]
-            }.daodao.zone/dao/${body.data.dao}/proposals/${
-              body.data.proposalId
-            }`,
+            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
             proposalId: body.data.proposalId,
