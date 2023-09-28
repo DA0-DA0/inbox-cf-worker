@@ -6,6 +6,7 @@ node_compat = true
 kv_namespaces = [
   { binding = "NONCES", id = "NONCES_ID", preview_id = "NONCES_PREVIEW_ID" },
   { binding = "INBOX", id = "INBOX_ID", preview_id = "INBOX_PREVIEW_ID" },
+  { binding = "PUSH", id = "PUSH_ID", preview_id = "PUSH_PREVIEW_ID" },
 ]
 
 [[queues.producers]]
@@ -14,3 +15,5 @@ binding = "EMAILS"
 
 # Secrets:
 # - ADD_SECRET
+# - WEB_PUSH_PUBLIC_KEY
+# - WEB_PUSH_PRIVATE_KEY

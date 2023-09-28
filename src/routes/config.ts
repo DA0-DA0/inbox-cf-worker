@@ -1,11 +1,23 @@
 import { secp256k1PublicKeyToBech32Hex } from '../crypto'
-import { AuthorizedRequest, EmailMetadata, Env } from '../types'
 import {
+  AuthorizedRequest,
+  EmailMetadata,
+  Env,
+  InboxItemType,
+  InboxItemTypeMethod,
+} from '../types'
+import {
+  TYPE_ALLOWED_METHODS,
   emailKey,
+  getPushSubscriptionKeys,
   getTypeConfigForWallet,
+  isSubscribed,
   respond,
   respondError,
+  subscribe,
   typeEnabledKey,
+  unsubscribe,
+  unsubscribeAll,
 } from '../utils'
 import {
   clearEmail,
@@ -13,6 +25,8 @@ import {
   verifyEmail,
   verifyEmailMetadata,
 } from '../utils/email'
+
+import { PushSubscription } from '@block65/webcrypto-web-push'
 
 type ConfigBody = {
   // Update email. If empty or null, remove email.
@@ -23,12 +37,35 @@ type ConfigBody = {
   verify?: string
   // If present, resend verification email.
   resend?: boolean
+  // If present, update push settings.
+  push?:
+    | {
+        // Add subscription.
+        type: 'subscribe'
+        subscription: PushSubscription
+      }
+    | {
+        // Check if subscribed or unsubscribe.
+        type: 'check' | 'unsubscribe'
+        p256dh: string
+      }
+    | {
+        // Unsubscribe all subscriptions.
+        type: 'unsubscribe_all'
+      }
 }
 
 type ConfigResponse = {
   email: string | null
   verified: boolean
   types: Record<string, number | null>
+  // Number of registered push subscriptions.
+  pushSubscriptions: number
+  // If `push` is defined in the body, returns whether or not the push is now
+  // subscribed.
+  pushSubscribed?: boolean
+  // Allowed methods per type.
+  typeAllowedMethods: Record<InboxItemType, InboxItemTypeMethod[]>
 }
 
 export const config = async (
@@ -40,8 +77,14 @@ export const config = async (
     request.parsedBody.data.auth.publicKey
   )
 
+  const {
+    email: newEmail,
+    types,
+    verify: verificationCode,
+    push,
+  } = request.parsedBody.data
+
   // Update email if present.
-  const newEmail = request.parsedBody.data.email
   if (typeof newEmail === 'string' || newEmail === null) {
     if (newEmail) {
       await setEmail(env, bech32Hex, newEmail)
@@ -51,7 +94,6 @@ export const config = async (
   }
 
   // Update notification settings if present.
-  const types = request.parsedBody.data.types
   if (typeof types === 'object') {
     await Promise.all(
       Object.entries(types).map(([type, config]) =>
@@ -61,7 +103,6 @@ export const config = async (
   }
 
   // Verify email if present.
-  const verificationCode = request.parsedBody.data.verify
   if (typeof verificationCode === 'string' && verificationCode.length > 0) {
     try {
       await verifyEmail(env, bech32Hex, verificationCode)
@@ -77,6 +118,33 @@ export const config = async (
         err
       )
       return respondError(500, 'Internal server error.')
+    }
+  }
+
+  let pushSubscribed: boolean | undefined
+  // Count push subscriptions.
+  let pushSubscriptions = (await getPushSubscriptionKeys(env, bech32Hex)).length
+
+  if (push) {
+    switch (push.type) {
+      case 'subscribe':
+        await subscribe(env, bech32Hex, push.subscription)
+        pushSubscribed = true
+        pushSubscriptions++
+        break
+      case 'check':
+        pushSubscribed = await isSubscribed(env, bech32Hex, push.p256dh)
+        break
+      case 'unsubscribe':
+        await unsubscribe(env, bech32Hex, push.p256dh)
+        pushSubscribed = false
+        pushSubscriptions--
+        break
+      case 'unsubscribe_all':
+        await unsubscribeAll(env, bech32Hex)
+        pushSubscribed = false
+        pushSubscriptions = 0
+        break
     }
   }
 
@@ -105,6 +173,9 @@ export const config = async (
     email,
     verified,
     types: typesConfig,
+    pushSubscriptions,
+    pushSubscribed,
+    typeAllowedMethods: TYPE_ALLOWED_METHODS,
   }
 
   // Return success.

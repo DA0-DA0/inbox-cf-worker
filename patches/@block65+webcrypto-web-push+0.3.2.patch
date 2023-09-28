@@ -1,0 +1,12 @@
+diff --git a/node_modules/@block65/webcrypto-web-push/dist/lib/isomorphic-crypto.js b/node_modules/@block65/webcrypto-web-push/dist/lib/isomorphic-crypto.js
+index 0ac75f5..f2ed45d 100644
+--- a/node_modules/@block65/webcrypto-web-push/dist/lib/isomorphic-crypto.js
++++ b/node_modules/@block65/webcrypto-web-push/dist/lib/isomorphic-crypto.js
+@@ -1,6 +1,4 @@
+-const impl = await (typeof globalThis !== 'undefined' && globalThis.crypto
+-    ? globalThis.crypto
+-    : import('node:crypto'));
++const impl = globalThis.crypto;
+ export const crypto = {
+     getRandomValues: (array) => 'webcrypto' in impl
+         ? impl.webcrypto.getRandomValues(array)

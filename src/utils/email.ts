@@ -1,13 +1,6 @@
-import {
-  Email,
-  EmailMetadata,
-  EmailTemplate,
-  Env,
-  InboxItemType,
-  InboxItemTypeMethod,
-} from '../types'
+import { Email, EmailMetadata, EmailTemplate, Env } from '../types'
 import { DEFAULT_EMAIL_SOURCE } from './constants'
-import { emailKey, typeEnabledKey } from './keys'
+import { emailKey } from './keys'
 import { objectMatchesStructure } from './objectMatchesStructure'
 
 // 3 days.
@@ -115,47 +108,6 @@ export const getVerifiedEmail = async (
 
   return email
 }
-
-export const getTypeConfig = async (
-  { INBOX }: Env,
-  bech32Hex: string,
-  type: string
-): Promise<number | null> => {
-  const config = await INBOX.get(typeEnabledKey(bech32Hex, type))
-  if (!config) {
-    return null
-  }
-
-  return Number(config)
-}
-
-export const isTypeMethodEnabled = async (
-  env: Env,
-  bech32Hex: string,
-  type: string,
-  method: InboxItemTypeMethod
-): Promise<boolean> => {
-  // Check if method is allowed for type.
-  const allowedMethods = TYPE_ALLOWED_METHODS[type]
-  if (allowedMethods && !allowedMethods.includes(method)) {
-    return false
-  }
-
-  const config = await getTypeConfig(env, bech32Hex, type)
-  // Default to enabled.
-  if (config === null || isNaN(config)) {
-    return true
-  }
-
-  return (Number(config) & method) === method
-}
-
-// If defined, only the listed methods are allowed for the given type.
-// Otherwise, all methods are allowed.
-const TYPE_ALLOWED_METHODS: Record<string, InboxItemTypeMethod[] | undefined> =
-  {
-    [InboxItemType.ProposalCreated]: [InboxItemTypeMethod.Email],
-  }
 
 export const sendEmail = async (
   { EMAILS }: Env,

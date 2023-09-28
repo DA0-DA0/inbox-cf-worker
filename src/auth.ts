@@ -33,32 +33,31 @@ export const verifySignature = async ({
       data.auth.publicKey,
       data.auth.chainBech32Prefix
     )
-    const message = serializeSignDoc(
-      makeSignDoc(
-        [
+    const signDoc = makeSignDoc(
+      [
+        {
+          type: data.auth.type,
+          value: {
+            signer,
+            data: JSON.stringify(data, undefined, 2),
+          },
+        },
+      ],
+      {
+        gas: '0',
+        amount: [
           {
-            type: data.auth.type,
-            value: {
-              signer,
-              data: JSON.stringify(data, undefined, 2),
-            },
+            denom: data.auth.chainFeeDenom,
+            amount: '0',
           },
         ],
-        {
-          gas: '0',
-          amount: [
-            {
-              denom: data.auth.chainFeeDenom,
-              amount: '0',
-            },
-          ],
-        },
-        data.auth.chainId,
-        '',
-        0,
-        0
-      )
+      },
+      data.auth.chainId,
+      '',
+      0,
+      0
     )
+    const message = serializeSignDoc(signDoc)
 
     return await verifySecp256k1Signature(
       data.auth.publicKey,

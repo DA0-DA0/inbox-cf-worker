@@ -29,6 +29,9 @@ npx wrangler kv:namespace create NONCES --preview
 
 npx wrangler kv:namespace create INBOX
 npx wrangler kv:namespace create INBOX --preview
+
+npx wrangler kv:namespace create PUSH
+npx wrangler kv:namespace create PUSH --preview
 ```
 
 3. Update the binding IDs in `wrangler.toml`:
@@ -37,6 +40,7 @@ npx wrangler kv:namespace create INBOX --preview
 kv-namespaces = [
   { binding = "NONCES", id = "<INSERT NONCES_ID>", preview_id = "<INSERT NONCES_PREVIEW_ID>" },
   { binding = "INBOX", id = "<INSERT INBOX_ID>", preview_id = "<INSERT INBOX_PREVIEW_ID>" },
+  { binding = "PUSH", id = "<INSERT PUSH_ID>", preview_id = "<INSERT PUSH_PREVIEW_ID>" },
 ]
 ```
 
@@ -50,6 +54,8 @@ kv-namespaces = [
 
 ```sh
 echo <VALUE> | npx wrangler secret put ADD_SECRET
+echo <VALUE> | npx wrangler secret put WEB_PUSH_PUBLIC_KEY
+echo <VALUE> | npx wrangler secret put WEB_PUSH_PRIVATE_KEY
 ```
 
 ## Deploy

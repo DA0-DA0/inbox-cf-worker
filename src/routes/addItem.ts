@@ -7,6 +7,7 @@ import {
   InboxItemTypeMethod,
   InboxItemTypeJoinedDaoData,
   InboxItemTypeProposalCreatedData,
+  PushNotificationPayload,
 } from '../types'
 import {
   itemKey,
@@ -20,6 +21,7 @@ import {
 } from '../utils'
 import { Request as IttyRequest } from 'itty-router'
 import { secp256k1PublicKeyToBech32Hex } from '../crypto'
+import { getPushSubscriptions, sendPushNotification } from '../utils/push'
 
 export const addItem = async (
   request: Request & IttyRequest,
@@ -86,12 +88,6 @@ export const addItem = async (
 
     switch (body.type) {
       case InboxItemType.JoinedDao:
-        // If no chain ID, log error and continue.
-        if (!body.chainId) {
-          console.error('No chain ID', JSON.stringify(body))
-          break
-        }
-
         if (
           objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
             dao: {},
@@ -108,12 +104,6 @@ export const addItem = async (
 
         break
       case InboxItemType.ProposalCreated:
-        // If no chain ID, log error and continue.
-        if (!body.chainId) {
-          console.error('No chain ID', JSON.stringify(body))
-          break
-        }
-
         if (
           objectMatchesStructure<InboxItemTypeProposalCreatedData>(body.data, {
             dao: {},
@@ -165,6 +155,96 @@ export const addItem = async (
           err
         )
       })
+    }
+  }
+
+  // Push notification.
+  const pushSubscriptions = await getPushSubscriptions(env, bech32Hex)
+  if (
+    pushSubscriptions.length > 0 &&
+    (await isTypeMethodEnabled(
+      env,
+      bech32Hex,
+      body.type,
+      InboxItemTypeMethod.Push
+    ))
+  ) {
+    let payload: PushNotificationPayload | undefined
+
+    switch (body.type) {
+      case InboxItemType.JoinedDao:
+        if (
+          objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
+            dao: {},
+            name: {},
+          })
+        ) {
+          payload = {
+            title: body.data.name,
+            message: `You've been added to ${body.data.name}. Follow it to receive notifications.`,
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'dao',
+              coreAddress: body.data.dao,
+            },
+          }
+        }
+
+        break
+      case InboxItemType.ProposalCreated:
+        if (
+          objectMatchesStructure<InboxItemTypeProposalCreatedData>(body.data, {
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
+        ) {
+          payload = {
+            title: body.data.daoName,
+            message: `New Proposal: ${body.data.proposalTitle}`,
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'proposal',
+              coreAddress: body.data.dao,
+              proposalId: body.data.proposalId,
+            },
+          }
+        }
+
+        break
+    }
+
+    // Send email. On failure, log error and continue.
+    // TODO: Capture push failures and retry.
+    // TODO: Remove expired or failed subscriptions.
+    if (payload) {
+      // Transform image URL from IPFS if necessary.
+      if (
+        typeof payload.imageUrl === 'string' &&
+        payload.imageUrl.startsWith('ipfs://')
+      ) {
+        payload.imageUrl = payload.imageUrl.replace(
+          'ipfs://',
+          'https://nftstorage.link/ipfs/'
+        )
+      }
+
+      await Promise.allSettled(
+        pushSubscriptions.map(
+          (subscription) =>
+            payload &&
+            sendPushNotification(env, subscription, payload).catch((err) => {
+              console.error(
+                'Error sending push notification',
+                bech32Hex,
+                JSON.stringify(body),
+                JSON.stringify(payload),
+                err
+              )
+            })
+        )
+      )
     }
   }
 
