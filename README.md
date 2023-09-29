@@ -56,6 +56,11 @@ kv-namespaces = [
 echo <VALUE> | npx wrangler secret put ADD_SECRET
 echo <VALUE> | npx wrangler secret put WEB_PUSH_PUBLIC_KEY
 echo <VALUE> | npx wrangler secret put WEB_PUSH_PRIVATE_KEY
+echo <VALUE> | npx wrangler secret put PUSHER_HOST
+echo <VALUE> | npx wrangler secret put PUSHER_PORT
+echo <VALUE> | npx wrangler secret put PUSHER_APP_ID
+echo <VALUE> | npx wrangler secret put PUSHER_APP_KEY
+echo <VALUE> | npx wrangler secret put PUSHER_SECRET
 ```
 
 ## Deploy

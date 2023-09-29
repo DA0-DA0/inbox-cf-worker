@@ -11,6 +11,11 @@ export interface Env {
   ADD_SECRET: string
   WEB_PUSH_PUBLIC_KEY: string
   WEB_PUSH_PRIVATE_KEY: string
+  PUSHER_HOST: string
+  PUSHER_PORT: string
+  PUSHER_APP_ID: string
+  PUSHER_APP_KEY: string
+  PUSHER_SECRET: string
 }
 
 export interface Auth {

@@ -1,3 +1,4 @@
+import Pusher from 'pusher'
 import { fromBech32, toHex } from '@cosmjs/encoding'
 import {
   AddItemBody,
@@ -72,6 +73,37 @@ export const addItem = async (
         chainId: body.chainId,
       },
     })
+
+    const {
+      PUSHER_HOST,
+      PUSHER_PORT,
+      PUSHER_APP_ID,
+      PUSHER_APP_KEY,
+      PUSHER_SECRET,
+    } = env
+    if (
+      PUSHER_HOST &&
+      PUSHER_PORT &&
+      PUSHER_APP_ID &&
+      PUSHER_APP_KEY &&
+      PUSHER_SECRET
+    ) {
+      // Notify WebSocket.
+      const pusher = new Pusher({
+        host: PUSHER_HOST,
+        port: PUSHER_PORT,
+        appId: PUSHER_APP_ID,
+        key: PUSHER_APP_KEY,
+        secret: PUSHER_SECRET,
+      })
+
+      await pusher.trigger(`inbox:${bech32Hex}`, 'broadcast', {
+        type: 'add',
+        data: {
+          id,
+        },
+      })
+    }
   }
 
   // Email notification.
