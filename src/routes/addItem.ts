@@ -97,7 +97,7 @@ export const addItem = async (
         secret: PUSHER_SECRET,
       })
 
-      await pusher.trigger(`inbox:${bech32Hex}`, 'broadcast', {
+      await pusher.trigger(`inbox_${bech32Hex}`, 'broadcast', {
         type: 'add',
         data: {
           id,
