@@ -1,5 +1,6 @@
-import Pusher from 'pusher'
 import { fromBech32, toHex } from '@cosmjs/encoding'
+import { Request as IttyRequest } from 'itty-router'
+
 import {
   AddItemBody,
   EmailTemplate,
@@ -21,8 +22,8 @@ import {
   isTypeMethodEnabled,
   sendEmail,
   DEFAULT_EMAIL_SOURCE,
+  triggerEvent,
 } from '../utils'
-import { Request as IttyRequest } from 'itty-router'
 import { secp256k1PublicKeyToBech32Hex } from '../crypto'
 import { getPushSubscriptions, sendPushNotification } from '../utils/push'
 
@@ -74,36 +75,13 @@ export const addItem = async (
       },
     })
 
-    const {
-      PUSHER_HOST,
-      PUSHER_PORT,
-      PUSHER_APP_ID,
-      PUSHER_APP_KEY,
-      PUSHER_SECRET,
-    } = env
-    if (
-      PUSHER_HOST &&
-      PUSHER_PORT &&
-      PUSHER_APP_ID &&
-      PUSHER_APP_KEY &&
-      PUSHER_SECRET
-    ) {
-      // Notify WebSocket.
-      const pusher = new Pusher({
-        host: PUSHER_HOST,
-        port: PUSHER_PORT,
-        appId: PUSHER_APP_ID,
-        key: PUSHER_APP_KEY,
-        secret: PUSHER_SECRET,
-      })
-
-      await pusher.trigger(`inbox_${bech32Hex}`, 'broadcast', {
-        type: 'add',
-        data: {
-          id,
-        },
-      })
-    }
+    // Notify WebSocket.
+    await triggerEvent(env, `inbox_${bech32Hex}`, 'add', {
+      type: 'add',
+      data: {
+        id,
+      }
+    })
   }
 
   // Email notification.
