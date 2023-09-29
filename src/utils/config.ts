@@ -49,14 +49,17 @@ export const TYPE_ALLOWED_METHODS: Record<
     InboxItemTypeMethod.Push,
   ],
   [InboxItemType.ProposalCreated]: [
+    InboxItemTypeMethod.Website,
     InboxItemTypeMethod.Email,
     InboxItemTypeMethod.Push,
   ],
   [InboxItemType.ProposalExecuted]: [
+    InboxItemTypeMethod.Website,
     InboxItemTypeMethod.Email,
     InboxItemTypeMethod.Push,
   ],
   [InboxItemType.ProposalClosed]: [
+    InboxItemTypeMethod.Website,
     InboxItemTypeMethod.Email,
     InboxItemTypeMethod.Push,
   ],
