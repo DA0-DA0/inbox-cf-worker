@@ -92,6 +92,7 @@ export const addItem = async (
       case InboxItemType.JoinedDao:
         if (
           objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
+            chainId: {},
             dao: {},
             name: {},
           })
@@ -108,6 +109,7 @@ export const addItem = async (
       case InboxItemType.ProposalCreated:
         if (
           objectMatchesStructure<InboxItemTypeProposalCreatedData>(body.data, {
+            chainId: {},
             dao: {},
             daoName: {},
             proposalId: {},
@@ -128,6 +130,7 @@ export const addItem = async (
       case InboxItemType.ProposalExecuted:
         if (
           objectMatchesStructure<InboxItemTypeProposalExecutedData>(body.data, {
+            chainId: {},
             dao: {},
             daoName: {},
             proposalId: {},
@@ -153,6 +156,7 @@ export const addItem = async (
       case InboxItemType.ProposalClosed:
         if (
           objectMatchesStructure<InboxItemTypeProposalClosedData>(body.data, {
+            chainId: {},
             dao: {},
             daoName: {},
             proposalId: {},
@@ -222,6 +226,7 @@ export const addItem = async (
       case InboxItemType.JoinedDao:
         if (
           objectMatchesStructure<InboxItemTypeJoinedDaoData>(body.data, {
+            chainId: {},
             dao: {},
             name: {},
           })
@@ -241,6 +246,7 @@ export const addItem = async (
       case InboxItemType.ProposalCreated:
         if (
           objectMatchesStructure<InboxItemTypeProposalCreatedData>(body.data, {
+            chainId: {},
             dao: {},
             daoName: {},
             proposalId: {},
@@ -263,6 +269,7 @@ export const addItem = async (
       case InboxItemType.ProposalExecuted:
         if (
           objectMatchesStructure<InboxItemTypeProposalExecutedData>(body.data, {
+            chainId: {},
             dao: {},
             daoName: {},
             proposalId: {},
@@ -293,6 +300,7 @@ export const addItem = async (
       case InboxItemType.ProposalClosed:
         if (
           objectMatchesStructure<InboxItemTypeProposalClosedData>(body.data, {
+            chainId: {},
             dao: {},
             daoName: {},
             proposalId: {},

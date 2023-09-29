@@ -81,12 +81,14 @@ export enum EmailTemplate {
 }
 
 export type InboxItemTypeJoinedDaoData = {
+  chainId: string
   dao: string
   name: string
   imageUrl: string | undefined
 }
 
 export type InboxItemTypeProposalCreatedData = {
+  chainId: string
   dao: string
   daoName: string
   imageUrl: string | undefined
