@@ -8,6 +8,8 @@ import {
   InboxItemTypeJoinedDaoData,
   InboxItemTypeProposalCreatedData,
   PushNotificationPayload,
+  InboxItemTypeProposalExecutedData,
+  InboxItemTypeProposalClosedData,
 } from '../types'
 import {
   itemKey,
@@ -123,6 +125,51 @@ export const addItem = async (
         }
 
         break
+      case InboxItemType.ProposalExecuted:
+        if (
+          objectMatchesStructure<InboxItemTypeProposalExecutedData>(body.data, {
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+            failed: {},
+          })
+        ) {
+          const status = body.data.failed ? 'Execution Failed' : 'Executed'
+
+          template = EmailTemplate.ProposalExecuted
+          variables = {
+            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
+            daoName: body.data.daoName,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
+            proposalId: body.data.proposalId,
+            proposalTitle: body.data.proposalTitle,
+            status,
+            statusLowerCase: status.toLowerCase(),
+          }
+        }
+
+        break
+      case InboxItemType.ProposalClosed:
+        if (
+          objectMatchesStructure<InboxItemTypeProposalClosedData>(body.data, {
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
+        ) {
+          template = EmailTemplate.ProposalClosed
+          variables = {
+            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
+            daoName: body.data.daoName,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
+            proposalId: body.data.proposalId,
+            proposalTitle: body.data.proposalTitle,
+          }
+        }
+
+        break
     }
 
     // Send email. On failure, log error and continue.
@@ -203,6 +250,58 @@ export const addItem = async (
           payload = {
             title: body.data.daoName,
             message: `New Proposal: ${body.data.proposalTitle}`,
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'proposal',
+              coreAddress: body.data.dao,
+              proposalId: body.data.proposalId,
+            },
+          }
+        }
+
+        break
+      case InboxItemType.ProposalExecuted:
+        if (
+          objectMatchesStructure<InboxItemTypeProposalExecutedData>(body.data, {
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+            failed: {},
+          })
+        ) {
+          payload = {
+            title: body.data.daoName,
+            message:
+              `Proposal Passed and ${
+                body.data.failed ? 'Execution Failed' : 'Executed'
+              }: ${body.data.proposalTitle}` +
+              // Add winning option if present.
+              (body.data.winningOption
+                ? ` (outcome: ${body.data.winningOption})`
+                : ''),
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'proposal',
+              coreAddress: body.data.dao,
+              proposalId: body.data.proposalId,
+            },
+          }
+        }
+
+        break
+      case InboxItemType.ProposalClosed:
+        if (
+          objectMatchesStructure<InboxItemTypeProposalClosedData>(body.data, {
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
+        ) {
+          payload = {
+            title: body.data.daoName,
+            message: `Proposal Rejected and Closed: ${body.data.proposalTitle}`,
             imageUrl: body.data.imageUrl,
             deepLink: {
               type: 'proposal',

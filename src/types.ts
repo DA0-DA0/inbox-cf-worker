@@ -76,6 +76,8 @@ export enum EmailTemplate {
   VerifyEmail = 'inbox-verify',
   JoinedDao = 'inbox-joined_dao',
   ProposalCreated = 'inbox-proposal_created',
+  ProposalExecuted = 'inbox-proposal_executed',
+  ProposalClosed = 'inbox-proposal_closed',
 }
 
 export type InboxItemTypeJoinedDaoData = {
@@ -91,6 +93,15 @@ export type InboxItemTypeProposalCreatedData = {
   proposalId: string
   proposalTitle: string
 }
+
+export type InboxItemTypeProposalExecutedData =
+  InboxItemTypeProposalCreatedData & {
+    failed: boolean
+    // Winning option for a multiple choice proposal.
+    winningOption?: string
+  }
+
+export type InboxItemTypeProposalClosedData = InboxItemTypeProposalCreatedData
 
 export type Email = {
   from: string
