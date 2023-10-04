@@ -3,13 +3,19 @@ import { Request as IttyRequest } from 'itty-router'
 export interface Env {
   NONCES: KVNamespace
   INBOX: KVNamespace
+  PUSH: KVNamespace
 
   EMAILS: Queue<Email>
 
   // Secrets.
   ADD_SECRET: string
-  AWS_ACCESS_KEY_ID: string
-  AWS_SECRET_ACCESS_KEY: string
+  WEB_PUSH_PUBLIC_KEY: string
+  WEB_PUSH_PRIVATE_KEY: string
+  PUSHER_HOST: string
+  PUSHER_PORT: string
+  PUSHER_APP_ID: string
+  PUSHER_APP_KEY: string
+  PUSHER_SECRET: string
 }
 
 export interface Auth {
@@ -61,26 +67,33 @@ export type EmailMetadata = {
 export enum InboxItemType {
   JoinedDao = 'joined_dao',
   ProposalCreated = 'proposal_created',
+  ProposalExecuted = 'proposal_executed',
+  ProposalClosed = 'proposal_closed',
 }
 
 export enum InboxItemTypeMethod {
   Website = 1 << 0,
   Email = 1 << 1,
+  Push = 1 << 2,
 }
 
 export enum EmailTemplate {
   VerifyEmail = 'inbox-verify',
   JoinedDao = 'inbox-joined_dao',
   ProposalCreated = 'inbox-proposal_created',
+  ProposalExecuted = 'inbox-proposal_executed',
+  ProposalClosed = 'inbox-proposal_closed',
 }
 
 export type InboxItemTypeJoinedDaoData = {
+  chainId: string
   dao: string
   name: string
   imageUrl: string | undefined
 }
 
 export type InboxItemTypeProposalCreatedData = {
+  chainId: string
   dao: string
   daoName: string
   imageUrl: string | undefined
@@ -88,9 +101,34 @@ export type InboxItemTypeProposalCreatedData = {
   proposalTitle: string
 }
 
+export type InboxItemTypeProposalExecutedData =
+  InboxItemTypeProposalCreatedData & {
+    failed: boolean
+    // Winning option for a multiple choice proposal.
+    winningOption?: string
+  }
+
+export type InboxItemTypeProposalClosedData = InboxItemTypeProposalCreatedData
+
 export type Email = {
   from: string
   to: string
   template: string
   variables: Record<string, string>
+}
+
+export type PushNotificationPayload = {
+  title: string
+  message: string
+  imageUrl: string | undefined
+  deepLink:
+    | {
+        type: 'dao'
+        coreAddress: string
+      }
+    | {
+        type: 'proposal'
+        coreAddress: string
+        proposalId: string
+      }
 }

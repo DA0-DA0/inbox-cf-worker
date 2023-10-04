@@ -9,6 +9,7 @@
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "patch-package": "^8.0.0",
     "prettier": "^2.7.1",
     "typescript": "^4.8.4",
     "wrangler": "^3.1.1"
@@ -17,9 +18,11 @@
   "scripts": {
     "start": "wrangler dev",
     "deploy": "wrangler deploy",
-    "dev": "wrangler dev --local --persist"
+    "dev": "wrangler dev --local --persist",
+    "postinstall": "patch-package"
   },
   "dependencies": {
+    "@block65/webcrypto-web-push": "^0.3.2",
     "@cosmjs/amino": "^0.29.4",
     "@cosmjs/crypto": "^0.29.4",
     "@cosmjs/encoding": "^0.29.4",

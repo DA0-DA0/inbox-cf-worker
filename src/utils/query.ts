@@ -1,6 +1,6 @@
 import { Env, LoadedItem } from '../types'
-import { getTypeConfig } from './email'
 import { itemKey, typeEnabledKey } from './keys'
+import { getTypeConfig } from './config'
 
 export const getItemsForWallet = async (
   { INBOX }: Env,
