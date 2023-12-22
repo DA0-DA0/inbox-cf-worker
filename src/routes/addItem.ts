@@ -13,6 +13,7 @@ import {
   InboxItemTypeProposalExecutedData,
   InboxItemTypeProposalClosedData,
   InboxItemTypePendingProposalCreatedData,
+  InboxItemTypePendingProposalRejectedData,
 } from '../types'
 import {
   itemKey,
@@ -81,7 +82,7 @@ export const addItem = async (
       type: 'add',
       data: {
         id,
-      }
+      },
     })
   }
 
@@ -129,34 +130,16 @@ export const addItem = async (
         ) {
           template = EmailTemplate.Proposal
           variables = {
-            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${body.data.proposalId}: ${body.data.proposalTitle}`,
+            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${
+              body.data.proposalId
+            }: ${body.data.proposalTitle}`,
             url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            preview: `A new ${body.data.fromApprover ? 'approval ' : ''}proposal is open for voting in ${body.data.daoName}.`,
+            preview: `A new ${
+              body.data.fromApprover ? 'approval ' : ''
+            }proposal is open for voting in ${body.data.daoName}.`,
             title: `New ${body.data.fromApprover ? 'Approval ' : ''}Proposal`,
-          }
-        }
-
-        break
-      case InboxItemType.PendingProposalCreated:
-        if (
-          objectMatchesStructure<InboxItemTypePendingProposalCreatedData>(body.data, {
-            chainId: {},
-            dao: {},
-            daoName: {},
-            proposalId: {},
-            proposalTitle: {},
-          })
-        ) {
-          template = EmailTemplate.Proposal
-          variables = {
-            subject: `Pending Proposal ${body.data.proposalId}: ${body.data.proposalTitle}`,
-            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
-            daoName: body.data.daoName,
-            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            preview: `A new pending proposal is waiting to be approved in ${body.data.daoName}.`,
-            title: 'New Pending Proposal',
           }
         }
 
@@ -176,12 +159,18 @@ export const addItem = async (
 
           template = EmailTemplate.Proposal
           variables = {
-            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${body.data.proposalId} Passed and ${status}: ${body.data.proposalTitle}`,
+            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${
+              body.data.proposalId
+            } Passed and ${status}: ${body.data.proposalTitle}`,
             url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            preview: `A proposal was passed and ${status.toLowerCase()} in ${body.data.daoName}.`,
-            title: `${body.data.fromApprover ? 'Approval ' : ''}Proposal Passed and ${status}`,
+            preview: `A proposal was passed and ${status.toLowerCase()} in ${
+              body.data.daoName
+            }.`,
+            title: `${
+              body.data.fromApprover ? 'Approval ' : ''
+            }Proposal Passed and ${status}`,
           }
         }
 
@@ -198,12 +187,66 @@ export const addItem = async (
         ) {
           template = EmailTemplate.Proposal
           variables = {
-            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${body.data.proposalId} Rejected and Closed: ${body.data.proposalTitle}`,
+            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${
+              body.data.proposalId
+            } Rejected and Closed: ${body.data.proposalTitle}`,
             url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
             preview: `A proposal was rejected and closed in ${body.data.daoName}.`,
-            title: `${body.data.fromApprover ? 'Approval ' : ''}Proposal Rejected and Closed`,
+            title: `${
+              body.data.fromApprover ? 'Approval ' : ''
+            }Proposal Rejected and Closed`,
+          }
+        }
+
+        break
+      case InboxItemType.PendingProposalCreated:
+        if (
+          objectMatchesStructure<InboxItemTypePendingProposalCreatedData>(
+            body.data,
+            {
+              chainId: {},
+              dao: {},
+              daoName: {},
+              proposalId: {},
+              proposalTitle: {},
+            }
+          )
+        ) {
+          template = EmailTemplate.Proposal
+          variables = {
+            subject: `Pending Proposal ${body.data.proposalId}: ${body.data.proposalTitle}`,
+            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
+            daoName: body.data.daoName,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
+            preview: `A new pending proposal is waiting to be approved in ${body.data.daoName}.`,
+            title: 'New Pending Proposal',
+          }
+        }
+
+        break
+      case InboxItemType.PendingProposalRejected:
+        if (
+          objectMatchesStructure<InboxItemTypePendingProposalRejectedData>(
+            body.data,
+            {
+              chainId: {},
+              dao: {},
+              daoName: {},
+              proposalId: {},
+              proposalTitle: {},
+            }
+          )
+        ) {
+          template = EmailTemplate.Proposal
+          variables = {
+            subject: `Pending Proposal ${body.data.proposalId} Rejected: ${body.data.proposalTitle}`,
+            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
+            daoName: body.data.daoName,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
+            preview: `A pending proposal was rejected in ${body.data.daoName}.`,
+            title: 'Pending Proposal Rejected',
           }
         }
 
@@ -224,13 +267,7 @@ export const addItem = async (
       }
 
       try {
-        await sendEmail(
-          env,
-          DEFAULT_EMAIL_SOURCE,
-          email,
-          template,
-          variables
-        )
+        await sendEmail(env, DEFAULT_EMAIL_SOURCE, email, template, variables)
       } catch (err) {
         // TODO: Capture email failures and retry.
         console.error(
@@ -302,29 +339,6 @@ export const addItem = async (
         }
 
         break
-      case InboxItemType.PendingProposalCreated:
-        if (
-          objectMatchesStructure<InboxItemTypePendingProposalCreatedData>(body.data, {
-            chainId: {},
-            dao: {},
-            daoName: {},
-            proposalId: {},
-            proposalTitle: {},
-          })
-        ) {
-          payload = {
-            title: body.data.daoName,
-            message: `New Pending Proposal: ${body.data.proposalTitle}`,
-            imageUrl: body.data.imageUrl,
-            deepLink: {
-              type: 'proposal',
-              coreAddress: body.data.dao,
-              proposalId: body.data.proposalId,
-            },
-          }
-        }
-
-        break
       case InboxItemType.ProposalExecuted:
         if (
           objectMatchesStructure<InboxItemTypeProposalExecutedData>(body.data, {
@@ -369,6 +383,55 @@ export const addItem = async (
           payload = {
             title: body.data.daoName,
             message: `Proposal Rejected and Closed: ${body.data.proposalTitle}`,
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'proposal',
+              coreAddress: body.data.dao,
+              proposalId: body.data.proposalId,
+            },
+          }
+        }
+
+        break
+      case InboxItemType.PendingProposalCreated:
+        if (
+          objectMatchesStructure<InboxItemTypePendingProposalCreatedData>(
+            body.data,
+            {
+              chainId: {},
+              dao: {},
+              daoName: {},
+              proposalId: {},
+              proposalTitle: {},
+            }
+          )
+        ) {
+          payload = {
+            title: body.data.daoName,
+            message: `New Pending Proposal: ${body.data.proposalTitle}`,
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'proposal',
+              coreAddress: body.data.dao,
+              proposalId: body.data.proposalId,
+            },
+          }
+        }
+
+        break
+      case InboxItemType.PendingProposalRejected:
+        if (
+          objectMatchesStructure<InboxItemTypePendingProposalRejectedData>(body.data, {
+            chainId: {},
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
+        ) {
+          payload = {
+            title: body.data.daoName,
+            message: `Pending Proposal Rejected: ${body.data.proposalTitle}`,
             imageUrl: body.data.imageUrl,
             deepLink: {
               type: 'proposal',

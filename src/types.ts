@@ -70,6 +70,7 @@ export enum InboxItemType {
   ProposalExecuted = 'proposal_executed',
   ProposalClosed = 'proposal_closed',
   PendingProposalCreated = 'pending_proposal_created',
+  PendingProposalRejected = 'pending_proposal_rejected',
 }
 
 export enum InboxItemTypeMethod {
@@ -112,6 +113,7 @@ export type InboxItemTypeProposalClosedData = InboxItemTypeProposalCreatedData
 
 export type InboxItemTypePendingProposalCreatedData = 
   Omit<InboxItemTypeProposalCreatedData, 'fromApprover'>
+export type InboxItemTypePendingProposalRejectedData = InboxItemTypePendingProposalCreatedData
 
 export type Email = {
   from: string
