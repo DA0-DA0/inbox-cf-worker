@@ -12,6 +12,7 @@ import {
   PushNotificationPayload,
   InboxItemTypeProposalExecutedData,
   InboxItemTypeProposalClosedData,
+  InboxItemTypePendingProposalCreatedData,
 } from '../types'
 import {
   itemKey,
@@ -134,6 +135,28 @@ export const addItem = async (
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
             preview: `A new ${body.data.fromApprover ? 'approval ' : ''}proposal is open for voting in ${body.data.daoName}.`,
             title: `New ${body.data.fromApprover ? 'Approval ' : ''}Proposal`,
+          }
+        }
+
+        break
+      case InboxItemType.PendingProposalCreated:
+        if (
+          objectMatchesStructure<InboxItemTypePendingProposalCreatedData>(body.data, {
+            chainId: {},
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
+        ) {
+          template = EmailTemplate.Proposal
+          variables = {
+            subject: `Pending Proposal ${body.data.proposalId}: ${body.data.proposalTitle}`,
+            url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
+            daoName: body.data.daoName,
+            imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
+            preview: `A new pending proposal is waiting to be approved in ${body.data.daoName}.`,
+            title: 'New Pending Proposal',
           }
         }
 
@@ -269,6 +292,29 @@ export const addItem = async (
           payload = {
             title: body.data.daoName,
             message: `New Proposal: ${body.data.proposalTitle}`,
+            imageUrl: body.data.imageUrl,
+            deepLink: {
+              type: 'proposal',
+              coreAddress: body.data.dao,
+              proposalId: body.data.proposalId,
+            },
+          }
+        }
+
+        break
+      case InboxItemType.PendingProposalCreated:
+        if (
+          objectMatchesStructure<InboxItemTypePendingProposalCreatedData>(body.data, {
+            chainId: {},
+            dao: {},
+            daoName: {},
+            proposalId: {},
+            proposalTitle: {},
+          })
+        ) {
+          payload = {
+            title: body.data.daoName,
+            message: `New Pending Proposal: ${body.data.proposalTitle}`,
             imageUrl: body.data.imageUrl,
             deepLink: {
               type: 'proposal',
