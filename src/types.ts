@@ -80,9 +80,7 @@ export enum InboxItemTypeMethod {
 export enum EmailTemplate {
   VerifyEmail = 'inbox-verify',
   JoinedDao = 'inbox-joined_dao',
-  ProposalCreated = 'inbox-proposal_created',
-  ProposalExecuted = 'inbox-proposal_executed',
-  ProposalClosed = 'inbox-proposal_closed',
+  Proposal = 'inbox-proposal',
 }
 
 export type InboxItemTypeJoinedDaoData = {
@@ -99,6 +97,7 @@ export type InboxItemTypeProposalCreatedData = {
   imageUrl: string | undefined
   proposalId: string
   proposalTitle: string
+  fromApprover?: boolean
 }
 
 export type InboxItemTypeProposalExecutedData =

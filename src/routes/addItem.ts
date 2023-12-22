@@ -126,13 +126,14 @@ export const addItem = async (
             proposalTitle: {},
           })
         ) {
-          template = EmailTemplate.ProposalCreated
+          template = EmailTemplate.Proposal
           variables = {
+            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${body.data.proposalId}: ${body.data.proposalTitle}`,
             url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            proposalId: body.data.proposalId,
-            proposalTitle: body.data.proposalTitle,
+            preview: `A new ${body.data.fromApprover ? 'approval ' : ''}proposal is open for voting in ${body.data.daoName}.`,
+            title: `New ${body.data.fromApprover ? 'Approval ' : ''}Proposal`,
           }
         }
 
@@ -150,15 +151,14 @@ export const addItem = async (
         ) {
           const status = body.data.failed ? 'Execution Failed' : 'Executed'
 
-          template = EmailTemplate.ProposalExecuted
+          template = EmailTemplate.Proposal
           variables = {
+            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${body.data.proposalId} Passed and ${status}: ${body.data.proposalTitle}`,
             url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            proposalId: body.data.proposalId,
-            proposalTitle: body.data.proposalTitle,
-            status,
-            statusLowerCase: status.toLowerCase(),
+            preview: `A proposal was passed and ${status.toLowerCase()} in ${body.data.daoName}.`,
+            title: `${body.data.fromApprover ? 'Approval ' : ''}Proposal Passed and ${status}`,
           }
         }
 
@@ -173,13 +173,14 @@ export const addItem = async (
             proposalTitle: {},
           })
         ) {
-          template = EmailTemplate.ProposalClosed
+          template = EmailTemplate.Proposal
           variables = {
+            subject: `${body.data.fromApprover ? 'Approval ' : ''}Proposal ${body.data.proposalId} Rejected and Closed: ${body.data.proposalTitle}`,
             url: `https://daodao.zone/dao/${body.data.dao}/proposals/${body.data.proposalId}`,
             daoName: body.data.daoName,
             imageUrl: body.data.imageUrl || 'https://daodao.zone/daodao.png',
-            proposalId: body.data.proposalId,
-            proposalTitle: body.data.proposalTitle,
+            preview: `A proposal was rejected and closed in ${body.data.daoName}.`,
+            title: `${body.data.fromApprover ? 'Approval ' : ''}Proposal Rejected and Closed`,
           }
         }
 
@@ -187,7 +188,6 @@ export const addItem = async (
     }
 
     // Send email. On failure, log error and continue.
-    // TODO: Capture email failures and retry.
     if (template && variables) {
       // Transform image URL from IPFS if necessary.
       if (
@@ -200,13 +200,16 @@ export const addItem = async (
         )
       }
 
-      await sendEmail(
-        env,
-        DEFAULT_EMAIL_SOURCE,
-        email,
-        template,
-        variables
-      ).catch((err) => {
+      try {
+        await sendEmail(
+          env,
+          DEFAULT_EMAIL_SOURCE,
+          email,
+          template,
+          variables
+        )
+      } catch (err) {
+        // TODO: Capture email failures and retry.
         console.error(
           'Error sending email',
           email,
@@ -215,7 +218,7 @@ export const addItem = async (
           JSON.stringify(variables),
           err
         )
-      })
+      }
     }
   }
 
