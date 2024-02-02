@@ -63,4 +63,14 @@ export const TYPE_ALLOWED_METHODS: Record<
     InboxItemTypeMethod.Email,
     InboxItemTypeMethod.Push,
   ],
+  [InboxItemType.PendingProposalCreated]: [
+    InboxItemTypeMethod.Website,
+    InboxItemTypeMethod.Email,
+    InboxItemTypeMethod.Push,
+  ],
+  [InboxItemType.PendingProposalRejected]: [
+    InboxItemTypeMethod.Website,
+    InboxItemTypeMethod.Email,
+    InboxItemTypeMethod.Push,
+  ],
 }
