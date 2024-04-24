@@ -8,6 +8,7 @@ import { respondError } from './utils'
 import { addItem } from './routes/addItem'
 import { clear } from './routes/clear'
 import { load } from './routes/load'
+import { loadBech32 } from './routes/loadBech32'
 import { config } from './routes/config'
 
 // Create CORS handlers.
@@ -35,8 +36,11 @@ router.post('/add/bech32/:bech32Address', addItem)
 // Get nonce for publicKey.
 router.get('/nonce/:publicKey', handleNonce)
 
-// Load items from inbox.
+// Load items from inbox via wallet address.
 router.get('/load/:walletAddress', load)
+
+// Load items from inbox via bech32 hash.
+router.get('/load/bech32/:bech32Hash', loadBech32)
 
 //! Authenticated routes.
 
