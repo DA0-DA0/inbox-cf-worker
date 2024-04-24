@@ -86,17 +86,95 @@ export const addItem = async (
     })
   }
 
-  // Email notification.
-  const email = await getVerifiedEmail(env, bech32Hex)
-  if (
-    email &&
-    (await isTypeMethodEnabled(
-      env,
-      bech32Hex,
-      body.type,
-      InboxItemTypeMethod.Email
-    ))
-  ) {
+  // Get all bech32 hashes for the profile so we can send notifications to all
+  // emails and push subscribers configured by the profile's wallets.
+  let bech32Hashes = [bech32Hex]
+  try {
+    const profile: {
+      chains: Record<
+        string,
+        {
+          publicKey: string
+        }
+      >
+    } = await (
+      await fetch(`https://pfpk.daodao.zone/bech32/${bech32Hex}`)
+    ).json()
+
+    // If profile loaded and has chains, get unique bech32 hashes.
+    if (
+      objectMatchesStructure(profile, {
+        chains: {},
+      }) &&
+      Array.isArray(profile.chains) &&
+      Object.values(profile.chains).length > 0
+    ) {
+      // Get unique bech32 hashes.
+      bech32Hashes = Array.from(
+        new Set(
+          Object.values(profile.chains).map(({ publicKey }) =>
+            secp256k1PublicKeyToBech32Hex(publicKey)
+          )
+        )
+      )
+    }
+  } catch (err) {
+    console.log(`Failed to load profile for ${bech32Hex}.`, err)
+  }
+
+  // Collect recipients for all bech32 hashes.
+  const recipients = await Promise.all(
+    bech32Hashes.map(async (bech32Hash) => {
+      const email = await getVerifiedEmail(env, bech32Hash)
+      const isEmailAllowed = email
+        ? await isTypeMethodEnabled(
+            env,
+            bech32Hash,
+            body.type,
+            InboxItemTypeMethod.Email
+          )
+        : false
+
+      const pushSubscriptions = await getPushSubscriptions(env, bech32Hash)
+      const isPushAllowed =
+        pushSubscriptions.length > 0
+          ? await isTypeMethodEnabled(
+              env,
+              bech32Hash,
+              body.type,
+              InboxItemTypeMethod.Push
+            )
+          : false
+
+      return {
+        bech32Hash,
+        email: isEmailAllowed ? email : null,
+        pushSubscriptions: isPushAllowed ? pushSubscriptions : [],
+      }
+    })
+  )
+
+  const emails = recipients.flatMap(({ bech32Hash, email }) =>
+    email
+      ? [
+          {
+            bech32Hash,
+            email,
+          },
+        ]
+      : []
+  )
+  const pushSubscriptions = recipients.flatMap(
+    ({ bech32Hash, pushSubscriptions }) =>
+      pushSubscriptions.length > 0
+        ? {
+            bech32Hash,
+            pushSubscriptions,
+          }
+        : []
+  )
+
+  if (emails.length > 0) {
     let template: EmailTemplate | undefined
     let variables: Record<string, unknown> | undefined
 
@@ -266,33 +344,32 @@ export const addItem = async (
         )
       }
 
-      try {
-        await sendEmail(env, DEFAULT_EMAIL_SOURCE, email, template, variables)
-      } catch (err) {
-        // TODO: Capture email failures and retry.
-        console.error(
-          'Error sending email',
-          email,
-          JSON.stringify(body),
-          template,
-          JSON.stringify(variables),
-          err
+      // TODO: Capture push failures and retry.
+      await Promise.allSettled(
+        emails.map(({ bech32Hash, email }) =>
+          sendEmail(
+            env,
+            DEFAULT_EMAIL_SOURCE,
+            email,
+            template,
+            variables
+          ).catch((err) => {
+            console.error(
+              'Error sending email',
+              bech32Hash,
+              JSON.stringify(body),
+              template,
+              JSON.stringify(variables),
+              err
+            )
+          })
         )
-      }
+      )
     }
   }
 
   // Push notification.
-  const pushSubscriptions = await getPushSubscriptions(env, bech32Hex)
-  if (
-    pushSubscriptions.length > 0 &&
-    (await isTypeMethodEnabled(
-      env,
-      bech32Hex,
-      body.type,
-      InboxItemTypeMethod.Push
-    ))
-  ) {
+  if (pushSubscriptions.length > 0) {
     let payload: PushNotificationPayload | undefined
 
     switch (body.type) {
@@ -421,13 +498,16 @@ export const addItem = async (
         break
       case InboxItemType.PendingProposalRejected:
         if (
-          objectMatchesStructure<InboxItemTypePendingProposalRejectedData>(body.data, {
-            chainId: {},
-            dao: {},
-            daoName: {},
-            proposalId: {},
-            proposalTitle: {},
-          })
+          objectMatchesStructure<InboxItemTypePendingProposalRejectedData>(
+            body.data,
+            {
+              chainId: {},
+              dao: {},
+              daoName: {},
+              proposalId: {},
+              proposalTitle: {},
+            }
+          )
         ) {
           payload = {
             title: body.data.daoName,
@@ -444,7 +524,7 @@ export const addItem = async (
         break
     }
 
-    // Send email. On failure, log error and continue.
+    // Send push notifications. On failure, log error and continue.
     // TODO: Capture push failures and retry.
     // TODO: Remove expired or failed subscriptions.
     if (payload) {
@@ -460,18 +540,18 @@ export const addItem = async (
       }
 
       await Promise.allSettled(
-        pushSubscriptions.map(
-          (subscription) =>
-            payload &&
+        pushSubscriptions.flatMap(({ bech32Hash, pushSubscriptions }) =>
+          pushSubscriptions.map((subscription) =>
             sendPushNotification(env, subscription, payload).catch((err) => {
               console.error(
                 'Error sending push notification',
-                bech32Hex,
+                bech32Hash,
                 JSON.stringify(body),
                 JSON.stringify(payload),
                 err
               )
             })
+          )
         )
       )
     }
